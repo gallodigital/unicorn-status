@@ -1,5 +1,7 @@
 require 'rubygems'
 require 'unicorn'
+require 'aws-sdk'
+require 'socket'
 
 # Usage for this program
 def usage
@@ -34,10 +36,43 @@ puts "Running infinite loop. Use CTRL+C to exit."
 puts "------------------------------------------"
 loop do
   Raindrops::Linux.unix_listener_stats([socket]).each do |addr, stats|
+    ts = Time.now.utc
+    active = stats.active
+    queued = stats.queued
+
     header = "Active Requests         Queued Requests"
     puts header
-    puts stats.active.to_s + stats.queued.to_s.rjust(header.length - stats.active.to_s.length)
+    puts active.to_s + queued.to_s.rjust(header.length - active.to_s.length)
     puts "" # Break line between polling intervals, makes it easier to read
+
+    # Now send this to CloudWatch
+    cw = AWS::CloudWatch.new
+    cw.put_metric_data(
+      :namespace => "Unicorn",
+      :metric_data => [
+        {
+          :metric_name => "ActiveRequestCount",
+          :dimensions => [ { :name => "host", :value => Socket.gethostname, :name => "addr", :value => addr } ],
+          :timestamp => ts.iso8601,
+          :value => active,
+          :unit => "Count"
+        },
+        {
+          :metric_name => "QueuedRequestCount",
+          :dimensions => [ { :name => "host", :value => Socket.gethostname, :name => "addr", :value => addr } ],
+          :timestamp => ts.iso8601,
+          :value => queued,
+          :unit => "Count"
+        },
+        {
+          :metric_name => "TotalRequestCount",
+          :dimensions => [ { :name => "host", :value => Socket.gethostname, :name => "addr", :value => addr } ],
+          :timestamp => ts.iso8601,
+          :value => active + queued,
+          :unit => "Count"
+        }
+      ]
+    )
   end
   sleep threshold
 end
