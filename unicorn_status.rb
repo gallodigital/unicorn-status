@@ -57,21 +57,21 @@ loop do
           :metric_name => "ActiveRequestCount",
           :dimensions => [ { :name => "host", :value => Socket.gethostname }, { :name => "addr", :value => addr } ],
           :timestamp => ts.iso8601,
-          :value => active,
+          :value => active.to_f,
           :unit => "Count"
         },
         {
           :metric_name => "QueuedRequestCount",
           :dimensions => [ { :name => "host", :value => Socket.gethostname }, { :name => "addr", :value => addr } ],
           :timestamp => ts.iso8601,
-          :value => queued,
+          :value => queued.to_f,
           :unit => "Count"
         },
         {
           :metric_name => "TotalRequestCount",
           :dimensions => [ { :name => "host", :value => Socket.gethostname }, { :name => "addr", :value => addr } ],
           :timestamp => ts.iso8601,
-          :value => active + queued,
+          :value => (active.to_i + queued.to_i).to_f,
           :unit => "Count"
         }
       ]
