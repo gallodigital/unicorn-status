@@ -59,14 +59,26 @@ loop do
           :timestamp => ts.iso8601,
           :value => active.to_f,
           :unit => "Count"
-        },
+        }
+      ]
+    )
+
+    cw.put_metric_data(
+      :namespace => "Unicorn",
+      :metric_data => [
         {
           :metric_name => "QueuedRequestCount",
           :dimensions => [ { :name => "host", :value => Socket.gethostname }, { :name => "addr", :value => addr } ],
           :timestamp => ts.iso8601,
           :value => queued.to_f,
           :unit => "Count"
-        },
+        }
+      ]
+    )
+
+    cw.put_metric_data(
+      :namespace => "Unicorn",
+      :metric_data => [
         {
           :metric_name => "TotalRequestCount",
           :dimensions => [ { :name => "host", :value => Socket.gethostname }, { :name => "addr", :value => addr } ],
