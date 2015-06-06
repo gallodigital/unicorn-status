@@ -49,7 +49,16 @@ loop do
     puts "" # Break line between polling intervals, makes it easier to read
 
     # Now send this to CloudWatch
-    cw = AWS::CloudWatch.new(region: region)
+
+    # Support AWS-SDK v1 and v2.
+    if defined?(AWS::CloudWatch)
+      cw = AWS::CloudWatch.new(region: region)
+    elsif defined?(Aws::CloudWatch::Client)
+      cw = Aws::CloudWatch::Client.new(region: region)
+    else
+      fail 'could not find a usable CloudWatch client - is aws-sdk for Ruby v1 or v2 installed properly?'
+    end
+
     cw.put_metric_data(
       :namespace => "Unicorn",
       :metric_data => [
